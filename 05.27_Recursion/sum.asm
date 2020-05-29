@@ -1,65 +1,86 @@
-        .ORIG x3000
+; Recursively computes Fibonacci numbers.
+; CSC 225, Assignment 6
+; Given code, Winter '20
 
-; int main(void)
-MAINFN  LD  R6, INITSP  ; Init. the stack pointer.
-        ADD R5, R6, #0  ; Init. the frame pointer.
+        .ORIG x4000
 
-        AND R0, R0, #0  ; Push '3'.
-        ADD R0, R0, #3
-        ADD R6, R6, #-1
-        STR R0, R6, #0
-        JSR SUMFN       ; Call "sum".
+; int fib(int)
+; TODO: Implement this function.
+FIBFN 
 
-        LDR R1, R6, #0  ; Pop the return value.
-        ADD R6, R6, #1
-        ADD R6, R6, #1  ; Pop '3'.
-
-        LEA R0, STRING  ; NOTE: "printf" is really another function call, but
-        PUTS            ;       it's defined in stdio, and its implementation
-        LD  R0, INTOFF  ;       is beyond the scope of this course.
-        ADD R0, R0, R1
-        OUT
-        LD  R0, NEWLINE
-        OUT
-
-        HALT
-
-INITSP  .FILL xFE00
-STRING  .STRINGZ "3 + 2 + 1 + 0 = "
-INTOFF  .FILL x30
-NEWLINE .FILL x0A
-
-
-; int sum(int)
-SUMFN   ADD R6, R6, #-1 ; Push space for ret. val.
+        ADD R6, R6, #-1 ; Push space for ret. val.
         ADD R6, R6, #-1 ; Push the return address.
         STR R7, R6, #0
         ADD R6, R6, #-1 ; Push the dynamic link.
         STR R5, R6, #0
         ADD R5, R6, #-1 ; Set the frame pointer.
-                        ; NOTE: There are no locals.
 
-        LDR R0, R5, #4  ; Load "n" into R0.
-        BRp SUMELSE     ; If negative or zero...
-        AND R0, R0, #0  ; ...set ret. val. to 0.
-        STR R0, R5, #3
-        BRnzp SUMRET    ; Else...
-SUMELSE ADD R0, R0, #-1 ; ...push "n - 1"...
+        ADD R6, R6, #-2
+        LDR R0, R5, #4
+        LDR R1, R5, #4
+
+        ADD R0, R0, #0
+        BRnz NEG
+      
+        ADD R0, R0, #-1
+        BRz BASE
+        ADD R0, R0, #1
+        
         ADD R6, R6, #-1
-        STR R0, R6, #0
-        JSR SUMFN       ; ...recurse...
-        LDR R1, R6, #0  ; ...pop ret. val. ...
-        ADD R6, R6, #1
-        ADD R6, R6, #1  ; ...pop "n - 1"...
-        LDR R0, R5, #4  ; ...load "n" into R0...
-        ADD R0, R0, R1  ; ...add recursive result...
-        STR R0, R5, #3  ; ...store the ret. val.
+        
+        ADD R1, R1, #-1
+        STR R1, R6, #0
+        
+        JSR FIBFN
+        LDR R2, R6, #0
+        ADD R6, R6, #2
+        
+        STR R2, R5, #0
+        LDR R3, R5, #4
+        ADD R3, R3, #-2
+        
+        ADD R6, R6, #-1
+        STR R3, R6, #0
+        
+        JSR FIBFN
+        LDR, R4, R6, #0
+        ADD R6, R6, #2
+        
+        STR R4, R5, #-1
+        
+        LDR R0, R5, #-1
+        LDR R1, R5, #0
+        ADD R0, R0, R1
+        
+        STR R0, R5, #3
+        BRnzp FIN
+      
+NEG     AND R3, R3, #0
+        STR R3, R5, #3
+        BRnzp FIN
 
-                        ; NOTE: There were no locals.
-SUMRET  LDR R5, R6, #0  ; Pop the dynamic link.
+BASE    AND R3, R3, #0
+        ADD R3, R3, #1
+        STR R3, R5, #3
+        BRnzp FIN
+        
+FIN     ADD R6, R6, #2
+        LDR R5, R6, #0  ; Pop the dynamic link.
         ADD R6, R6, #1
         LDR R7, R6, #0  ; Pop the return address.
         ADD R6, R6, #1
         RET             ; Return.
 
+      
+
+
+PROMPT  .STRINGZ "Enter an integer: "
+SAVER0  .FILL x0000
+SAVER1  .FILL x0000
+SAVER2  .FILL x0000
+SAVER3  .FILL x0000
+SAVER4  .FILL x0000
+SAVER5  .FILL x0000
+SAVER6  .FILL x0000
+SAVER7  .FILL x0000
         .END
